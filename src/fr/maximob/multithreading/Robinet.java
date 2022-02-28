@@ -1,5 +1,7 @@
 package fr.maximob.multithreading;
 
+import static java.lang.Thread.sleep;
+
 public class Robinet implements Runnable {
 
     protected Baignoire baignoire;
@@ -16,11 +18,20 @@ public class Robinet implements Runnable {
     }
 
     public void debite() {
-        while (!this.baignoire.isFull()) {
-            final int newVolume = this.baignoire.getVolume() + this.volume;
-            if (newVolume > this.baignoire.maxVolume) this.baignoire.setVolume(this.baignoire.maxVolume);
-            else this.baignoire.setVolume(newVolume);
-            System.out.println("débite : " + this.baignoire.toString());
+        if (this.volume == 0) return;
+        while (!this.baignoire.isFull() && this.baignoire.getVolumeFuite() > 0) {
+//            System.out.println(this.baignoire.isFull());
+//            System.out.println(this.baignoire.getVolumeFuite());
+            synchronized (this.baignoire) {
+                final int newVolume = this.baignoire.getVolume() + this.volume;
+                this.baignoire.setVolume(Math.min(newVolume, this.baignoire.maxVolume));
+                System.out.println("débite ↗ " + this.volume + "L : " + this.baignoire.toString());
+            }
+            try {
+                sleep(2);
+            } catch (Exception e) {
+                System.out.println(e);
+            }
         }
     }
 

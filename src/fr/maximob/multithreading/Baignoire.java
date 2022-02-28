@@ -1,5 +1,7 @@
 package fr.maximob.multithreading;
 
+import static java.lang.Thread.sleep;
+
 public class Baignoire implements Runnable {
 
     protected final int maxVolume;
@@ -30,12 +32,24 @@ public class Baignoire implements Runnable {
 
     public void fuite() {
         if (this.volumeFuite == 0) return;
-        while (!this.isEmpty()) {
-            final int newVolume = this.getVolume() - this.volumeFuite;
-            if (newVolume < 0) this.setVolume(0);
-            else this.setVolume(newVolume);
-            System.out.println("fuite : " + this.toString());
+        while (this.volumeFuite > 0) {
+            synchronized (this) {
+                final int newVolume = this.getVolume() - this.volumeFuite;
+                this.setVolume(Math.max(newVolume, 0));
+                System.out.println("fuite ↘ " + this.volumeFuite + "L : " + this.toString());
+                if (this.isEmpty()) this.colmate();
+            }
+            try {
+                sleep(2);
+            } catch (Exception e) {
+                System.out.println(e);
+            }
         }
+    }
+
+    public void colmate() {
+        this.volumeFuite--;
+        System.out.println("\uD83D\uDEE0 Colmatage \uD83D\uDEE0 : fuite à " + this.volumeFuite + "L");
     }
 
     public boolean isFull() {
@@ -57,6 +71,10 @@ public class Baignoire implements Runnable {
 
     public int getMaxVolume() {
         return this.maxVolume;
+    }
+
+    public int getVolumeFuite() {
+        return this.volumeFuite;
     }
 
     public String getFillingRatio() {
